@@ -6,6 +6,8 @@ const defaultChartValueStyle = TextStyle(
   color: Colors.black,
 );
 
+TextStyle getDefaultTextStyle(int index) => defaultChartValueStyle;
+
 const defaultLegendStyle = TextStyle(
   fontSize: 12,
   fontWeight: FontWeight.bold,

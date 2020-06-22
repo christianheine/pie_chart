@@ -82,9 +82,6 @@ class _HomePageState extends State<HomePage> {
                   decimalPlaces: 1,
                   showChartValueLabel: true,
                   initialAngle: 0,
-                  chartValueStyle: defaultChartValueStyle.copyWith(
-                    color: Colors.blueGrey[900].withOpacity(0.9),
-                  ),
                   chartType: ChartType.disc,
                   centerText: "MY CHART",
                 )

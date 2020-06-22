@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:touchable/touchable.dart';
 
 import 'chart_painter.dart';
 import 'legend.dart';
@@ -8,11 +9,14 @@ enum LegendPosition { top, bottom, left, right }
 
 enum ChartType { disc, ring }
 
+typedef GetTextStyleForIndex = TextStyle Function(int index);
+
 class PieChart extends StatefulWidget {
   PieChart({
     @required this.dataMap,
     this.showChartValueLabel = false,
-    this.chartValueStyle = defaultChartValueStyle,
+    this.getChartValueStyle = getDefaultTextStyle,
+    this.chartCenterValueStyle = defaultChartValueStyle,
     this.legendPosition = LegendPosition.right,
     this.chartType = ChartType.disc,
     this.chartValueBackgroundColor = Colors.grey,
@@ -30,13 +34,16 @@ class PieChart extends StatefulWidget {
     this.formatChartValues,
     this.centerText,
     this.strokeWidth = 20.0,
+    this.onTap,
     Key key,
   }) : super(key: key);
 
   final Map<String, double> dataMap;
 
   //Chart values text styling
-  final TextStyle chartValueStyle;
+  final GetTextStyleForIndex getChartValueStyle;
+  final TextStyle chartCenterValueStyle;
+
   final bool showChartValueLabel;
   final Color chartValueBackgroundColor;
 
@@ -60,12 +67,13 @@ class PieChart extends StatefulWidget {
   final String centerText;
   final double strokeWidth;
 
+  final ValueChanged<int> onTap;
+
   @override
   _PieChartState createState() => _PieChartState();
 }
 
-class _PieChartState extends State<PieChart>
-    with SingleTickerProviderStateMixin {
+class _PieChartState extends State<PieChart> with SingleTickerProviderStateMixin {
   Animation<double> animation;
   AnimationController controller;
   double _fraction = 0.0;
@@ -132,29 +140,29 @@ class _PieChartState extends State<PieChart>
     return Flexible(
       child: LayoutBuilder(
         builder: (_, c) => Container(
-          height: widget.chartRadius != null
-              ? c.maxWidth < widget.chartRadius
-                  ? c.maxWidth
-                  : widget.chartRadius
-              : null,
-          child: CustomPaint(
-            painter: PieChartPainter(
-              _fraction,
-              widget.showChartValuesOutside,
-              widget.colorList,
-              chartValueStyle: widget.chartValueStyle,
-              chartValueBackgroundColor: widget.chartValueBackgroundColor,
-              values: legendValues,
-              initialAngle: widget.initialAngle,
-              showValuesInPercentage: widget.showChartValuesInPercentage,
-              decimalPlaces: widget.decimalPlaces,
-              showChartValueLabel: widget.showChartValueLabel,
-              chartType: widget.chartType,
-              centerText: widget.centerText,
-              formatChartValues: widget.formatChartValues,
-              strokeWidth: widget.strokeWidth,
+          height: widget.chartRadius != null ? c.maxWidth < widget.chartRadius ? c.maxWidth : widget.chartRadius : null,
+          child: CanvasTouchDetector(
+            builder: (context) => CustomPaint(
+              painter: PieChartPainter(
+                _fraction,
+                widget.showChartValuesOutside,
+                widget.colorList,
+                context: context,
+                getChartValueStyle: widget.getChartValueStyle,
+                chartValueBackgroundColor: widget.chartValueBackgroundColor,
+                values: legendValues,
+                initialAngle: widget.initialAngle,
+                showValuesInPercentage: widget.showChartValuesInPercentage,
+                decimalPlaces: widget.decimalPlaces,
+                showChartValueLabel: widget.showChartValueLabel,
+                chartType: widget.chartType,
+                centerText: widget.centerText,
+                formatChartValues: widget.formatChartValues,
+                strokeWidth: widget.strokeWidth,
+                onTap: widget.onTap,
+              ),
+              child: AspectRatio(aspectRatio: 1),
             ),
-            child: AspectRatio(aspectRatio: 1),
           ),
         ),
       ),

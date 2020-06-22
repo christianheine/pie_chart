@@ -2,6 +2,9 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:pie_chart/pie_chart.dart';
+import 'package:touchable/touchable.dart';
+
+import '../pie_chart.dart';
 
 class PieChartPainter extends CustomPainter {
   List<Paint> _paintList = [];
@@ -9,7 +12,8 @@ class PieChartPainter extends CustomPainter {
   double _total = 0;
   double _totalAngle = math.pi * 2;
 
-  final TextStyle chartValueStyle;
+  final GetTextStyleForIndex getChartValueStyle;
+  final TextStyle chartCenterValueStyle;
   final Color chartValueBackgroundColor;
   final double initialAngle;
   final bool showValuesInPercentage;
@@ -20,6 +24,8 @@ class PieChartPainter extends CustomPainter {
   final String centerText;
   final Function formatChartValues;
   final double strokeWidth;
+  final BuildContext context;
+  final ValueChanged<int> onTap;
 
   double _prevAngle = 0;
 
@@ -27,7 +33,8 @@ class PieChartPainter extends CustomPainter {
     double angleFactor,
     this.showChartValuesOutside,
     List<Color> colorList, {
-    this.chartValueStyle,
+    this.chartCenterValueStyle,
+    this.getChartValueStyle,
     this.chartValueBackgroundColor,
     List<double> values,
     this.initialAngle,
@@ -38,6 +45,8 @@ class PieChartPainter extends CustomPainter {
     this.centerText,
     this.formatChartValues,
     this.strokeWidth,
+    this.context,
+    this.onTap,
   }) {
     for (int i = 0; i < values.length; i++) {
       final paint = Paint()..color = getColor(colorList, i);
@@ -54,34 +63,28 @@ class PieChartPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    var touchyCanvas = TouchyCanvas(context, canvas);
     final side = size.width < size.height ? size.width : size.height;
     _prevAngle = this.initialAngle;
     for (int i = 0; i < _subParts.length; i++) {
-      canvas.drawArc(
+      touchyCanvas.drawArc(
         new Rect.fromLTWH(0.0, 0.0, side, size.height),
         _prevAngle,
         (((_totalAngle) / _total) * _subParts[i]),
         chartType == ChartType.disc ? true : false,
         _paintList[i],
+        onTapDown: (detail) {
+          if (onTap != null) onTap(i);
+        },
       );
       final radius = showChartValuesOutside ? side * 0.5 : side / 3;
-      final x = (radius) *
-          math.cos(
-              _prevAngle + ((((_totalAngle) / _total) * _subParts[i]) / 2));
-      final y = (radius) *
-          math.sin(
-              _prevAngle + ((((_totalAngle) / _total) * _subParts[i]) / 2));
+      final x = (radius) * math.cos(_prevAngle + ((((_totalAngle) / _total) * _subParts[i]) / 2));
+      final y = (radius) * math.sin(_prevAngle + ((((_totalAngle) / _total) * _subParts[i]) / 2));
       if (_subParts.elementAt(i).toInt() != 0) {
-        final value = formatChartValues != null
-            ? formatChartValues(_subParts.elementAt(i))
-            : _subParts.elementAt(i).toStringAsFixed(this.decimalPlaces);
-        final name = showValuesInPercentage
-            ? (((_subParts.elementAt(i) / _total) * 100)
-                    .toStringAsFixed(this.decimalPlaces) +
-                '%')
-            : value;
+        final value = formatChartValues != null ? formatChartValues(_subParts.elementAt(i)) : _subParts.elementAt(i).toStringAsFixed(this.decimalPlaces);
+        final name = showValuesInPercentage ? (((_subParts.elementAt(i) / _total) * 100).toStringAsFixed(this.decimalPlaces) + '%') : value;
 
-        _drawName(canvas, name, x, y, side);
+        _drawName(canvas, name, x, y, side, getChartValueStyle(i));
       }
       _prevAngle = _prevAngle + (((_totalAngle) / _total) * _subParts[i]);
     }
@@ -92,10 +95,10 @@ class PieChartPainter extends CustomPainter {
   }
 
   void _drawCenterText(Canvas canvas, double side) {
-    _drawName(canvas, centerText, 0, 0, side);
+    _drawName(canvas, centerText, 0, 0, side, chartCenterValueStyle);
   }
 
-  void _drawName(Canvas canvas, String name, double x, double y, double side) {
+  void _drawName(Canvas canvas, String name, double x, double y, double side, TextStyle chartValueStyle) {
     TextSpan span = TextSpan(
       style: chartValueStyle,
       text: name,
@@ -131,6 +134,5 @@ class PieChartPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(PieChartPainter oldDelegate) =>
-      oldDelegate._totalAngle != _totalAngle;
+  bool shouldRepaint(PieChartPainter oldDelegate) => oldDelegate._totalAngle != _totalAngle;
 }
