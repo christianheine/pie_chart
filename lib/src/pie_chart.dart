@@ -149,6 +149,7 @@ class _PieChartState extends State<PieChart> with SingleTickerProviderStateMixin
                 widget.colorList,
                 context: context,
                 getChartValueStyle: widget.getChartValueStyle,
+                chartCenterValueStyle: widget.chartCenterValueStyle,
                 chartValueBackgroundColor: widget.chartValueBackgroundColor,
                 values: legendValues,
                 initialAngle: widget.initialAngle,
